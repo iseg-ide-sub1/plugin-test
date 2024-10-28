@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "plugin-test.helloWorld",
-        "title": "Hello World"
+        "command": "action.save",
+        "title": "Save Actions"
       }
     ]
   },
