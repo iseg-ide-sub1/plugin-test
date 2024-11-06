@@ -3,27 +3,48 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let actions: any[] = [];
-
+let id: number = 0;
 export function activate(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+        vscode.commands.registerCommand('action.begin', () => {
+            actions = [];
+            vscode.window.showInformationMessage('Recording starts.')
+        })
+    );
+
     // 监听编辑器中的操作
     context.subscriptions.push(
-        // 修改文本文件事件
-        vscode.workspace.onDidChangeTextDocument(event => {
-            logAction('changeTextDocument', event);
-            // logAction('changeTextDocument', event.document.uri.toString());
+        // 1 打开文本文件
+        vscode.workspace.onDidOpenTextDocument(doc => {
+            actions.push(doc)
+            console.log(id++,'| 1-onDidOpenTextDocument')
+            console.log(doc)
         }),
-        // 保存文本文件事件
-        vscode.workspace.onDidSaveTextDocument(event => {
-            logAction('saveTextDocument', event);
-            logAction('saveTextDocument', event.uri.toString());
+        // 2 关闭文本文件
+        vscode.workspace.onDidCloseTextDocument(doc => {
+            actions.push(doc)
+            console.log(id++,'| 2-onDidCloseTextDocument')
+            console.log(doc)
         }),
-        // 切换文本编辑器事件
+        // 3 切换编辑器
         vscode.window.onDidChangeActiveTextEditor(editor => {
-            if (editor) {
-                logAction('changeActiveEditor', editor);
-                // logAction('changeActiveEditor', editor.document.uri.toString());
-            }
-        })
+            actions.push(editor)
+            console.log(id++,'| 3-onDidChangeActiveTextEditor')
+            console.log(editor)
+        }),
+        // 4 光标选择
+        vscode.window.onDidChangeTextEditorSelection(event => {
+            actions.push(event)
+            console.log(id++,'| 4-onDidChangeTextEditorSelection')
+            // console.log(event.textEditor.document.getText(event.selections[0]))
+            console.log(event)
+        }),
+        // 5 文本内容变化
+        vscode.workspace.onDidChangeTextDocument(event => {
+            actions.push(event)
+            console.log(id++,'| 5-onDidChangeTextDocument')
+            console.log(event)
+        }),
     );
 
     // 注册命令，保存动作数据
@@ -32,10 +53,6 @@ export function activate(context: vscode.ExtensionContext) {
             saveActions();
         })
     );
-}
-
-function logAction(action: string, event: any) {
-    actions.push({ action, event, timestamp: new Date().toLocaleString('zh-CN')});
 }
 
 function saveActions() {
